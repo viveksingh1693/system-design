@@ -1,0 +1,14 @@
+<config xmlns="http://www.ehcache.org/v3">
+
+    <cache alias="com.viv.user.entity.User">
+        <heap unit="entries">1000</heap>
+        <expiry>
+            <ttl unit="minutes">10</ttl>
+        </expiry>
+    </cache>
+
+    <cache alias="com.viv.order.entity.Order">
+        <heap unit="entries">1000</heap>
+    </cache>
+
+</config>

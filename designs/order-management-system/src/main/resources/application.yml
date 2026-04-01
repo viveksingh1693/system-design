@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    user:
+      jdbc-url: jdbc:mysql://localhost:3306/user_db?connectionTimeZone=UTC
+      username: root
+      password: root
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+    order:
+      jdbc-url: jdbc:postgresql://localhost:5432/order_db?options=-c%20TimeZone=UTC
+      username: postgres
+      password: root
+      driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+        javax:
+          cache:
+            provider: org.ehcache.jsr107.EhcacheCachingProvider
+
+logging:
+  level:
+    org.hibernate.cache: DEBUG

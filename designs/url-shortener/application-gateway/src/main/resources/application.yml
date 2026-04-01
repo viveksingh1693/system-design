@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: application-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - RemoveRequestHeader=Cookie
+      routes:
+        - id: shortener-api
+          uri: ${app.backend.base-url}
+          predicates:
+            - Path=/api/**,/v3/api-docs,/v3/api-docs/**,/swagger-ui.html,/swagger-ui/**,/actuator/**
+        - id: shortener-redirect
+          uri: ${app.backend.base-url}
+          predicates:
+            - Path=/{shortCode}
+
+server:
+  port: 8081
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+
+logging:
+  level:
+    root: INFO
+    com.viv.applicationgateway: INFO
+    org.springframework.cloud.gateway: INFO
+
+springdoc:
+  swagger-ui:
+    enabled: false
+
+app:
+  backend:
+    base-url: ${BACKEND_BASE_URL:http://localhost:8080}
+  security:
+    username: ${GATEWAY_USERNAME:gateway-admin}
+    password: ${GATEWAY_PASSWORD:change-me-please}
+    role: ${GATEWAY_ROLE:EDGE_ADMIN}

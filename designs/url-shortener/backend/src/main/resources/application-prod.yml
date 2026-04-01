@@ -1,0 +1,30 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/urlshortener}
+    username: ${DB_USERNAME:urlshortener}
+    password: ${DB_PASSWORD:urlshortener}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+
+app:
+  shortener:
+    base-url: ${APP_BASE_URL:http://localhost:8080}
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+  cache:
+    short-url-ttl: ${SHORT_URL_CACHE_TTL:10m}
