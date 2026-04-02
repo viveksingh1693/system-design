@@ -2,6 +2,8 @@
 
 Spring Boot 4 sample application that models a simplified ticket-booking system with clear service boundaries for catalog, inventory, booking, and payment.
 
+It now also includes a modular React frontend under `frontend/` for discovery, operations, and booking workflows.
+
 ## What This Project Shows
 
 - `CatalogService` for event creation and discovery
@@ -19,6 +21,9 @@ Spring Boot 4 sample application that models a simplified ticket-booking system 
 - H2
 - Spring Validation
 - springdoc-openapi
+- React 18
+- Vite
+- TypeScript
 
 ## Domain Model
 
@@ -114,6 +119,54 @@ After starting the application:
 - `POST /bookings/{bookingId}/confirm`
 - `POST /bookings/{bookingId}/cancel`
 - `GET /bookings/{bookingId}`
+
+## Frontend Modules
+
+- `Discovery`: show search with abortable requests and short-lived client caching
+- `Operations`: separate event onboarding and show launch workflows
+- `Bookings`: hold, confirm, cancel, and inspect booking flows
+- `Shared API client`: typed request helpers, centralized error handling, cache invalidation hooks
+
+## Frontend Run
+
+Start the backend first:
+
+```bash
+./mvnw spring-boot:run
+```
+
+In another terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Vite dev server runs on `http://localhost:5173` and proxies API traffic to the backend on `http://localhost:8080`.
+
+## Production Build Integration
+
+The frontend build outputs directly to `src/main/resources/static`, so the backend can serve the SPA and API from the same origin:
+
+```bash
+cd frontend
+npm run build
+```
+
+After that, Spring Boot serves:
+
+- `/` for discovery
+- `/operations` for the operations console
+- `/bookings` for the booking desk
+- `/assets/*` with long-lived immutable cache headers
+
+## 1000 QPS Considerations
+
+- Static frontend assets are hashed and can sit behind a CDN or edge cache.
+- Client-side discovery reads are debounced via deferred updates, abort stale requests, and use short-lived in-memory caching.
+- Spring Boot static delivery enables compression, HTTP/2, graceful shutdown, and higher Tomcat connection/thread ceilings for burstier traffic.
+- Write-heavy booking actions invalidate relevant caches immediately to keep operators from acting on stale inventory.
 
 ## Example Flow
 
