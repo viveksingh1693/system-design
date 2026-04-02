@@ -65,3 +65,4 @@ Services:
 - Gateway Swagger UI: `http://localhost:8081/swagger-ui.html`
 - Gateway OpenAPI JSON: `http://localhost:8081/v3/api-docs`
 - Backend Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Interview prep: `INTERVIEW_PREPARATION.md`
