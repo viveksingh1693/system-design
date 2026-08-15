@@ -86,9 +86,8 @@
 4. What existed before modern payment gateways?
 >	Before modern payment gateways, payments evolved through cash, cheques, manual credit card processing, direct merchant–bank integrations, and payment processors. As e-commerce grew, direct integrations became difficult because every bank had different protocols and security requirements. Payment processors reduced this complexity, and modern payment gateways extended the model by providing standardized APIs, security, fraud detection, routing, retries, settlement, and compliance, allowing merchants to integrate once while supporting the entire payment ecosystem.
 >---
-5. Why was the older approach insufficient?
-6. What are the business goals of a payment gateway?
-7. What types of payments are supported?
+5. What are the business goals of a payment gateway?
+6. What types of payments are supported?
 	A modern payment gateway supports multiple payment methods such as credit and debit cards, bank transfers, UPI, digital wallets, net banking, BNPL, recurring payments, QR code payments, and international payments. Each payment method has its own authentication flow, settlement model, and operational characteristics, but the gateway abstracts these differences behind a unified API. Internally, this is typically implemented using an orchestration layer with payment-method-specific adapters, allowing the platform to add new payment rails without impacting merchants or the core payment processing logic.
 	Supporting multiple payment types means the gateway cannot hard-code a single payment flow.
 	 A common design is:
@@ -308,15 +307,49 @@
 # 5. APIs
 
 41. What APIs should the gateway expose?
-42. How should payment creation work?
-43. How should payment status be queried?
-44. How should refunds be initiated?
-45. How should cancellations work?
-46. How should webhook subscriptions work?
-47. How should authentication APIs work?
-48. How should merchant onboarding APIs work?
-49. Which APIs must be idempotent?
-50. Which APIs should be asynchronous?
+> A payment gateway should expose APIs that cover the complete payment lifecycle—from merchant onboarding and authentication to payment creation, authorization, capture, refunds, payouts, webhooks, reconciliation, and reporting. APIs should be **RESTful, idempotent where necessary, secure, versioned, and designed around payment resources rather than bank-specific operations.**
+
+## API Design Principles
+
+A production payment gateway API should be:
+
+* Resource-oriented
+* Stateless
+* Versioned
+* Secure
+* Idempotent
+* Backward compatible
+* Auditable
+
+Example:
+
+```text
+https://api.gateway.com/v1/payments
+```
+
+### High-Level API Categories
+
+```text
+                    Payment Gateway APIs
+                           │
+        ┌──────────────────┼───────────────────┐
+        │                  │                   │
+ Merchant APIs      Payment APIs        Admin APIs
+        │                  │                   │
+        └──────────────────┼───────────────────┘
+                           │
+          Settlement / Reports / Webhooks
+```
+
+41. How should payment creation work?
+42. How should payment status be queried?
+43. How should refunds be initiated?
+44. How should cancellations work?
+45. How should webhook subscriptions work?
+46. How should authentication APIs work?
+47. How should merchant onboarding APIs work?
+48. Which APIs must be idempotent?
+49. Which APIs should be asynchronous?
 
 ---
 
