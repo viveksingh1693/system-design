@@ -288,7 +288,113 @@ A Kafka broker is a server in a Kafka cluster that stores partition replicas and
 ---
 
 20. What is a leader?
+	Leader is not a separate type of server. It is a role played by one replica of a partition.
+	|Role|Responsibility|
+	|---|---|
+	|**Leader**|Handles normal partition traffic and establishes log order|
+	|**Follower**|Replicates the leader's log|
+	|**Replica**|Generic term for either leader or follower|
+	|**ISR**|Replicas sufficiently caught up with the leader|
 
+	Producer
+	    │
+	    ▼
+	Leader
+	    │
+	    ├──→ Follower 1 ✓
+	    └──→ Follower 2 ✓
+	             │
+	             ▼
+	            ACK
+"The leader broker for 1,000 partitions dies. What happens?"
+
+Broker failure
+      │
+      ▼
+1,000 affected partition leaders
+      │
+      ▼
+Eligible ISR replicas identified
+      │
+      ▼
+New leaders elected
+      │
+      ▼
+Clients refresh metadata
+      │
+      ▼
+Traffic resumes
+
+
+Leader election storm
+        +
+Metadata propagation
+        +
+Producer retries
+        +
+Consumer fetch retries
+        +
+Under-replicated partitions
+        +
+Recovery traffic
+
+#### Complete Leader Diagram
+                           KAFKA CLUSTER
+                                │
+                 ┌──────────────┼──────────────┐
+                 ▼              ▼              ▼
+              Broker 1       Broker 2       Broker 3
+                 │              │              │
+                 ▼              ▼              ▼
+                P0             P0             P0
+              LEADER         FOLLOWER       FOLLOWER
+                 │              │              │
+                 │──────────────►│              │
+                 │───────────────┼─────────────►│
+                 │              Replication     │
+                 │
+                 ▼
+             Producer
+                 │
+                 ▼
+              Consumer
+  
+  
+  #### Complete Failure Diagram
+                    BEFORE FAILURE
+
+				P0
+				│
+				├── Broker 1 → LEADER
+				├── Broker 2 → FOLLOWER
+				└── Broker 3 → FOLLOWER
+				          │
+				          │
+				          ▼
+				      Broker 1 ❌
+				          │
+				          ▼
+				   Kafka Controller
+				          │
+				          ▼
+				   Select eligible ISR
+				          │
+				          ▼
+				   Broker 2 → NEW LEADER
+				          │
+				          ├── Broker 3 → FOLLOWER
+				          │
+				          ▼
+				   Producer / Consumer
+				   refresh metadata
+				          │
+				          ▼
+				      Traffic resumes
+
+
+A Kafka partition leader is the replica responsible for serving normal traffic for a partition and establishing the order of writes to that partition. Producers send writes to the leader, and consumers normally fetch from the leader, while follower replicas replicate its log. The leader is a role of a partition replica, not a separate server, so the same broker can lead some partitions and follow others. If the leader's broker fails, Kafka can elect an eligible in-sync replica as the new leader. At scale, leader distribution matters because a hot partition creates a hot leader, and simply moving the leader doesn't solve the underlying hot-partition problem.
+
+---
 ## C. End-to-End
 
 21. What happens when an application publishes an event?
