@@ -2,6 +2,8 @@ package com.viv.business.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import java.util.UUID;
         "/api/v1/businesses/{businessId}/locations"
 )
 @RequiredArgsConstructor
+@Slf4j 
 public class BusinessLocationController {
 
     private final BusinessLocationService locationService;
@@ -29,14 +32,16 @@ public class BusinessLocationController {
             @Valid @RequestBody
             CreateBusinessLocationRequest request) {
 
+        log.info("Creating business location for businessId: {} with request: {}", businessId, request);
+
+        BusinessLocationResponse response = locationService.create(
+                businessId,
+                request
+        );
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(
-                        locationService.create(
-                                businessId,
-                                request
-                        )
-                );
+                .body(response);
     }
 
     @GetMapping
@@ -44,11 +49,13 @@ public class BusinessLocationController {
     getLocations(
             @PathVariable UUID businessId) {
 
-        return ResponseEntity.ok(
-                locationService.getByBusinessId(
-                        businessId
-                )
+        log.info("Fetching business locations for businessId: {}", businessId);
+
+        List<BusinessLocationResponse> response = locationService.getByBusinessId(
+                businessId
         );
+
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{locationId}")
@@ -58,13 +65,16 @@ public class BusinessLocationController {
             @Valid @RequestBody
             UpdateBusinessLocationRequest request) {
 
-        return ResponseEntity.ok(
-                locationService.update(
-                        businessId,
-                        locationId,
-                        request
-                )
+        log.info("Updating business location for businessId: {} and locationId: {} with request: {}",
+                businessId, locationId, request);
+
+        BusinessLocationResponse response = locationService.update(
+                businessId,
+                locationId,
+                request
         );
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{locationId}")
@@ -72,6 +82,9 @@ public class BusinessLocationController {
     public void deactivate(
             @PathVariable UUID businessId,
             @PathVariable UUID locationId) {
+
+        log.info("Deactivating business location for businessId: {} and locationId: {}",
+                businessId, locationId);
 
         locationService.deactivate(
                 businessId,

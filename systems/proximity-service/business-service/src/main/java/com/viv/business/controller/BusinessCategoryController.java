@@ -2,6 +2,8 @@ package com.viv.business.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/business-categories")
 @RequiredArgsConstructor
+@Slf4j 
 public class BusinessCategoryController {
 
     private final BusinessCategoryService categoryService;
@@ -25,24 +28,34 @@ public class BusinessCategoryController {
     public ResponseEntity<BusinessCategoryResponse> create(
             @Valid @RequestBody CreateBusinessCategoryRequest request) {
 
+        log.info("Creating business category with request: {}", request);
+
+        BusinessCategoryResponse response = categoryService.create(request);
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(categoryService.create(request));
+                .body(response);
     }
 
     @GetMapping("/{categoryId}")
     public ResponseEntity<BusinessCategoryResponse> getById(
             @PathVariable UUID categoryId) {
 
-        return ResponseEntity.ok(
-                categoryService.getById(categoryId));
+        log.info("Fetching business category with id: {}", categoryId);
+
+        BusinessCategoryResponse response = categoryService.getById(categoryId);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<List<BusinessCategoryResponse>> getActiveCategories() {
 
-        return ResponseEntity.ok(
-                categoryService.getActiveCategories());
+        log.info("Fetching active business categories");
+
+        List<BusinessCategoryResponse> response = categoryService.getActiveCategories();
+
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{categoryId}")
@@ -50,10 +63,13 @@ public class BusinessCategoryController {
             @PathVariable UUID categoryId,
             @Valid @RequestBody UpdateBusinessCategoryRequest request) {
 
-        return ResponseEntity.ok(
-                categoryService.update(
-                        categoryId,
-                        request));
+        log.info("Updating business category with id: {} and request: {}", categoryId, request);
+
+        BusinessCategoryResponse response = categoryService.update(
+                categoryId,
+                request);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{categoryId}/deactivate")
@@ -61,6 +77,7 @@ public class BusinessCategoryController {
     public void deactivate(
             @PathVariable UUID categoryId) {
 
+        log.info("Deactivating business category with id: {}", categoryId);
         categoryService.deactivate(categoryId);
     }
 }

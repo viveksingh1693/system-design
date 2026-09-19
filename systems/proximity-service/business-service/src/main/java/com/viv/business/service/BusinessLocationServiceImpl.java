@@ -1,6 +1,8 @@
 package com.viv.business.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j 
 public class BusinessLocationServiceImpl
         implements BusinessLocationService {
 
@@ -32,6 +35,8 @@ public class BusinessLocationServiceImpl
     public BusinessLocationResponse create(
             UUID businessId,
             CreateBusinessLocationRequest request) {
+
+        log.info("Creating business location for businessId: {} with request: {}", businessId, request);
 
         Business business = getBusiness(businessId);
 
@@ -56,6 +61,8 @@ public class BusinessLocationServiceImpl
 
         BusinessLocation saved = locationRepository.save(location);
 
+        log.info("Created business location: {} for businessId: {}", saved.getId(), businessId);
+
         return toResponse(saved);
     }
 
@@ -64,16 +71,22 @@ public class BusinessLocationServiceImpl
     public List<BusinessLocationResponse> getByBusinessId(
             UUID businessId) {
 
+        log.info("Fetching active business locations for businessId: {}", businessId);
+
         // Verify business exists.
         getBusiness(businessId);
 
-        return locationRepository
+        List<BusinessLocationResponse> result = locationRepository
                 .findByBusiness_IdAndStatus(
                         businessId,
                         LocationStatus.ACTIVE)
                 .stream()
                 .map(this::toResponse)
                 .toList();
+
+        log.info("Found {} active business locations for businessId: {}", result.size(), businessId);
+
+        return result;
     }
 
     @Override
@@ -81,6 +94,9 @@ public class BusinessLocationServiceImpl
             UUID businessId,
             UUID locationId,
             UpdateBusinessLocationRequest request) {
+
+        log.info("Updating business location for businessId: {} and locationId: {} with request: {}",
+                businessId, locationId, request);
 
         BusinessLocation location = getLocation(businessId, locationId);
 
@@ -108,6 +124,8 @@ public class BusinessLocationServiceImpl
         location.setPostalCode(
                 normalize(request.postalCode()));
 
+        log.info("Updated business location: {} for businessId: {}", locationId, businessId);
+
         return toResponse(location);
     }
 
@@ -116,12 +134,16 @@ public class BusinessLocationServiceImpl
             UUID businessId,
             UUID locationId) {
 
+        log.info("Deactivating business location: {} for businessId: {}", locationId, businessId);
+
         BusinessLocation location = getLocation(
                 businessId,
                 locationId);
 
         location.setStatus(
                 LocationStatus.INACTIVE);
+
+        log.info("Deactivated business location: {} for businessId: {}", locationId, businessId);
     }
 
     private Business getBusiness(UUID businessId) {

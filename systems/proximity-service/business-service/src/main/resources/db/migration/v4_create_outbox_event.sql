@@ -1,27 +1,31 @@
 CREATE TABLE outbox_event (
-    id              UUID PRIMARY KEY,
+    id UUID NOT NULL,
+    aggregate_id UUID NOT NULL,
+    aggregate_type VARCHAR(100) NOT NULL,
+    event_type VARCHAR(150) NOT NULL,
 
-    aggregate_type  VARCHAR(100) NOT NULL,
+    payload JSONB NOT NULL,
 
-    aggregate_id    UUID NOT NULL,
+    status VARCHAR(20) NOT NULL,
 
-    event_type      VARCHAR(150) NOT NULL,
+    retry_count INTEGER NOT NULL DEFAULT 0,
 
-    payload         JSONB NOT NULL,
+    claimed_at TIMESTAMPTZ,
+    claimed_by VARCHAR(100),
 
-    status          VARCHAR(20) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    published_at TIMESTAMPTZ,
 
-    retry_count     INTEGER NOT NULL DEFAULT 0,
+    last_error VARCHAR(2000),
 
-    created_at      TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT pk_outbox_event
+        PRIMARY KEY (id),
 
-    published_at    TIMESTAMP WITH TIME ZONE,
-
-    last_error      VARCHAR(2000)
+    CONSTRAINT chk_outbox_event_status
+        CHECK (status IN (
+            'PENDING',
+            'PROCESSING',
+            'PUBLISHED',
+            'FAILED'
+        ))
 );
-
-CREATE INDEX idx_outbox_event_status_created
-ON outbox_event(status, created_at);
-
-CREATE INDEX idx_outbox_event_aggregate
-ON outbox_event(aggregate_type, aggregate_id);

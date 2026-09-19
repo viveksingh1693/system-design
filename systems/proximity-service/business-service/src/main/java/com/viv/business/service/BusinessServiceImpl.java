@@ -1,6 +1,8 @@
 package com.viv.business.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j 
 public class BusinessServiceImpl implements BusinessService {
 
         private final OutboxService outboxService;
@@ -43,6 +46,8 @@ public class BusinessServiceImpl implements BusinessService {
         @Override
         public BusinessResponse create(
                         CreateBusinessRequest request) {
+
+                log.info("Creating business with request: {}", request);
 
                 BusinessCategory category = businessCategoryRepository.findById(
                                 request.categoryId()).orElseThrow(
@@ -68,6 +73,8 @@ public class BusinessServiceImpl implements BusinessService {
 
                 Business savedBusiness = businessRepository.save(business);
 
+                log.info("Created business with id: {} for categoryId: {}", savedBusiness.getId(), savedBusiness.getCategory().getId());
+
                 BusinessCreatedEvent event = new BusinessCreatedEvent(
                                 savedBusiness.getId(),
                                 savedBusiness.getCategory().getId(),
@@ -89,6 +96,8 @@ public class BusinessServiceImpl implements BusinessService {
         @Transactional(readOnly = true)
         public BusinessResponse getById(UUID id) {
 
+                log.info("Fetching business by id: {}", id);
+
                 Business business = businessRepository
                                 .findById(id)
                                 .orElseThrow(() -> new BusinessNotFoundException(
@@ -103,6 +112,8 @@ public class BusinessServiceImpl implements BusinessService {
         public BusinessResponse update(
                         UUID id,
                         UpdateBusinessRequest request) {
+
+                log.info("Updating business id: {} with request: {}", id, request);
 
                 Business business = businessRepository
                                 .findById(id)
@@ -121,6 +132,8 @@ public class BusinessServiceImpl implements BusinessService {
                                         request.locations());
                 }
 
+                log.info("Updated business id: {}", id);
+
                 return toResponse(business);
         }
 
@@ -131,10 +144,14 @@ public class BusinessServiceImpl implements BusinessService {
         @Override
         public void deactivate(UUID id) {
 
+                log.info("Deactivating business id: {}", id);
+
                 Business business = getBusiness(id);
 
                 business.setStatus(
                                 BusinessStatus.INACTIVE);
+
+                log.info("Business id: {} deactivated", id);
         }
 
         @Observed(name = "business.suspend", contextualName = "suspend-business")
@@ -142,10 +159,14 @@ public class BusinessServiceImpl implements BusinessService {
         @Override
         public void suspend(UUID id) {
 
+                log.info("Suspending business id: {}", id);
+
                 Business business = getBusiness(id);
 
                 business.setStatus(
                                 BusinessStatus.SUSPENDED);
+
+                log.info("Business id: {} suspended", id);
         }
 
         @Observed(name = "business.activate", contextualName = "activate-business")
@@ -153,10 +174,14 @@ public class BusinessServiceImpl implements BusinessService {
         @Override
         public void activate(UUID id) {
 
+                log.info("Activating business id: {}", id);
+
                 Business business = getBusiness(id);
 
                 business.setStatus(
                                 BusinessStatus.ACTIVE);
+
+                log.info("Business id: {} activated", id);
         }
 
         private Business getBusiness(UUID id) {

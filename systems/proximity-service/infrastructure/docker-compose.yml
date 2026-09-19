@@ -1,0 +1,282 @@
+services:
+
+  # ==========================================================
+  # PostgreSQL + PostGIS
+  # ==========================================================
+  postgres:
+    image: postgis/postgis:16-3.5
+    container_name: proximity-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: proximity
+      POSTGRES_USER: proximity
+      POSTGRES_PASSWORD: proximity
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U proximity -d proximity"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - proximity-network
+
+
+  # ==========================================================
+  # Kafka
+  # ==========================================================
+  kafka:
+    image: apache/kafka:4.0.1
+    container_name: proximity-kafka
+    restart: unless-stopped
+
+    ports:
+      - "9092:9092"
+
+    environment:
+
+      # -------------------------------
+      # KRaft
+      # -------------------------------
+      KAFKA_NODE_ID: 1
+
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      # -------------------------------
+      # Listeners
+      # -------------------------------
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # -------------------------------
+      # Single-node development config
+      # -------------------------------
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+    networks:
+      - proximity-network
+
+
+  # ==========================================================
+  # Kafka topic initialization
+  # ==========================================================
+  kafka-init:
+    image: apache/kafka:4.0.1
+    container_name: proximity-kafka-init
+
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+    entrypoint: ["/bin/bash", "-c"]
+
+    command:
+      - |
+        /opt/kafka/bin/kafka-topics.sh \
+          --bootstrap-server kafka:29092 \
+          --create \
+          --if-not-exists \
+          --topic business-events \
+          --partitions 3 \
+          --replication-factor 1
+
+        echo "Kafka topic initialization completed."
+
+    networks:
+      - proximity-network
+
+
+  # ==========================================================
+  # Jaeger
+  # ==========================================================
+  jaeger:
+    image: jaegertracing/jaeger:2.21.0
+    container_name: proximity-jaeger
+    restart: unless-stopped
+
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+    networks:
+      - proximity-network
+
+
+  # ==========================================================
+  # Prometheus
+  # ==========================================================
+  prometheus:
+    image: prom/prometheus:v3.13.3
+    container_name: proximity-prometheus
+    restart: unless-stopped
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+
+    depends_on:
+      business-service:
+        condition: service_started
+
+    networks:
+      - proximity-network
+
+
+  # ==========================================================
+  # Grafana
+  # ==========================================================
+  grafana:
+    image: grafana/grafana:12.1.1
+    container_name: proximity-grafana
+    restart: unless-stopped
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+
+      GF_USERS_ALLOW_SIGN_UP: "false"
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+    depends_on:
+      - prometheus
+
+    networks:
+      - proximity-network
+
+
+  # ==========================================================
+  # Business Service
+  # ==========================================================
+  business-service:
+    build:
+      context: ../business-service
+      dockerfile: Dockerfile
+
+    container_name: proximity-business-service
+
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    environment:
+
+      # ------------------------------------------------------
+      # Spring
+      # ------------------------------------------------------
+      SPRING_APPLICATION_NAME: business-service
+
+      # ------------------------------------------------------
+      # PostgreSQL
+      # ------------------------------------------------------
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/proximity
+      SPRING_DATASOURCE_USERNAME: proximity
+      SPRING_DATASOURCE_PASSWORD: proximity
+
+      # ------------------------------------------------------
+      # Kafka
+      # ------------------------------------------------------
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+
+      # ------------------------------------------------------
+      # OpenTelemetry / Jaeger
+      # ------------------------------------------------------
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+
+      # ------------------------------------------------------
+      # JVM
+      # ------------------------------------------------------
+      JAVA_OPTS: >-
+        -XX:MaxRAMPercentage=75
+        -XX:+UseG1GC
+
+    depends_on:
+
+      postgres:
+        condition: service_healthy
+
+      kafka:
+        condition: service_healthy
+
+      jaeger:
+        condition: service_started
+
+    networks:
+      - proximity-network
+
+
+# ============================================================
+# Volumes
+# ============================================================
+volumes:
+
+  postgres_data:
+    name: proximity-postgres-data
+
+  kafka_data:
+    name: proximity-kafka-data
+
+  prometheus_data:
+    name: proximity-prometheus-data
+
+  grafana_data:
+    name: proximity-grafana-data
+
+
+# ============================================================
+# Network
+# ============================================================
+networks:
+
+  proximity-network:
+    name: proximity-network
+    driver: bridge

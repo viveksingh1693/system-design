@@ -1,6 +1,8 @@
 package com.viv.business.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j 
 public class BusinessCategoryServiceImpl
         implements BusinessCategoryService {
 
@@ -29,6 +32,7 @@ public class BusinessCategoryServiceImpl
     public BusinessCategoryResponse create(
             CreateBusinessCategoryRequest request) {
 
+        log.info("Creating business category with request: {}", request);
 
         String name = normalizeName(request.name());
         String code = normalizeCode(request.code());
@@ -45,12 +49,16 @@ public class BusinessCategoryServiceImpl
 
         BusinessCategory saved = repository.save(category);
 
+        log.info("Created business category: {}", saved.getId());
+
         return toResponse(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public BusinessCategoryResponse getById(UUID id) {
+
+        log.info("Fetching business category by id: {}", id);
 
         BusinessCategory category = repository.findById(id)
                 .orElseThrow(() -> new BusinessCategoryNotFoundException("Business category not found with ID: " + id));
@@ -74,6 +82,8 @@ public class BusinessCategoryServiceImpl
             UUID id,
             UpdateBusinessCategoryRequest request) {
 
+        log.info("Updating business category with id: {} and request: {}", id, request);
+
         BusinessCategory category = repository.findById(id)
                 .orElseThrow(() -> new BusinessCategoryNotFoundException("Business category not found with ID: " + id));
 
@@ -90,16 +100,22 @@ public class BusinessCategoryServiceImpl
         category.setDescription(
                 normalizeDescription(request.description()));
 
+        log.info("Updated business category: {}", id);
+
         return toResponse(category);
     }
 
     @Override
     public void deactivate(UUID id) {
 
+        log.info("Deactivating business category with id: {}", id);
+
         BusinessCategory category = repository.findById(id)
                 .orElseThrow(() -> new BusinessCategoryNotFoundException("Business category not found with ID: " + id));
 
         category.setStatus(CategoryStatus.INACTIVE);
+
+        log.info("Deactivated business category: {}", id);
     }
 
     private void validateDuplicateCode(String code) {
