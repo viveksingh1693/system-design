@@ -1,26 +1,38 @@
 package com.viv.business.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.viv.business.enums.OutboxEventStatus;
 
-@Entity
-@Table(name = "outbox_event", indexes = {
-        @Index(name = "idx_outbox_event_status_created", columnList = "status, created_at"),
-        @Index(name = "idx_outbox_event_aggregate", columnList = "aggregate_type, aggregate_id")
-})
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity 
+@Table (name = "outbox_event")
+@Getter 
+@Setter 
+@NoArgsConstructor 
+@AllArgsConstructor 
+@Builder 
 public class OutboxEvent {
 
-    @Id
+    @Id 
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
@@ -33,17 +45,18 @@ public class OutboxEvent {
     @Column(name = "event_type", nullable = false, length = 150)
     private String eventType;
 
-    @Column(nullable = false, columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false)
     private String payload;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Enumerated (EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
     private OutboxEventStatus status;
 
     @Column(name = "retry_count", nullable = false)
-    private Integer retryCount;
+    private int retryCount;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @Column(name = "published_at")
@@ -52,8 +65,17 @@ public class OutboxEvent {
     @Column(name = "last_error", length = 2000)
     private String lastError;
 
-    @PrePersist
+    @Column(name = "claimed_at")
+    private Instant claimedAt;
+
+    @Column(name = "claimed_by", length = 100)
+    private String claimedBy;
+
+    @PrePersist 
     protected void onCreate() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
 
         if (createdAt == null) {
             createdAt = Instant.now();
@@ -63,7 +85,7 @@ public class OutboxEvent {
             status = OutboxEventStatus.PENDING;
         }
 
-        if (retryCount == null) {
+        if (retryCount < 0) {
             retryCount = 0;
         }
     }
