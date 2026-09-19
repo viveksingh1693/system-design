@@ -12,7 +12,6 @@ import com.viv.business.enums.CategoryStatus;
 import com.viv.business.exception.BusinessCategoryAlreadyExistsException;
 import com.viv.business.exception.BusinessCategoryNotFoundException;
 import com.viv.business.repository.BusinessCategoryRepository;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +23,12 @@ public class BusinessCategoryServiceImpl
 
     private final BusinessCategoryRepository repository;
 
+
+   
     @Override
     public BusinessCategoryResponse create(
             CreateBusinessCategoryRequest request) {
+
 
         String name = normalizeName(request.name());
         String code = normalizeCode(request.code());

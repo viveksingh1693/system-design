@@ -22,6 +22,8 @@ import com.viv.business.exception.BusinessNotFoundException;
 import com.viv.business.repository.BusinessCategoryRepository;
 import com.viv.business.repository.BusinessRepository;
 
+import io.micrometer.observation.annotation.Observed;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,8 @@ public class BusinessServiceImpl implements BusinessService {
         private final BusinessRepository businessRepository;
         private final BusinessCategoryRepository businessCategoryRepository;
 
+        @Observed(name = "business.create", contextualName = "create-business")
+        @Transactional
         @Override
         public BusinessResponse create(
                         CreateBusinessRequest request) {
@@ -80,6 +84,7 @@ public class BusinessServiceImpl implements BusinessService {
                 return toResponse(savedBusiness);
         }
 
+        @Observed(name = "business.get", contextualName = "get-business")
         @Override
         @Transactional(readOnly = true)
         public BusinessResponse getById(UUID id) {
@@ -92,6 +97,8 @@ public class BusinessServiceImpl implements BusinessService {
                 return toResponse(business);
         }
 
+        @Observed(name = "business.update", contextualName = "update-business")
+        @Transactional
         @Override
         public BusinessResponse update(
                         UUID id,
@@ -117,6 +124,10 @@ public class BusinessServiceImpl implements BusinessService {
                 return toResponse(business);
         }
 
+
+
+        @Observed(name = "business.deactivate", contextualName = "deactivate-business")
+        @Transactional
         @Override
         public void deactivate(UUID id) {
 
@@ -126,6 +137,8 @@ public class BusinessServiceImpl implements BusinessService {
                                 BusinessStatus.INACTIVE);
         }
 
+        @Observed(name = "business.suspend", contextualName = "suspend-business")
+        @Transactional
         @Override
         public void suspend(UUID id) {
 
@@ -135,6 +148,8 @@ public class BusinessServiceImpl implements BusinessService {
                                 BusinessStatus.SUSPENDED);
         }
 
+        @Observed(name = "business.activate", contextualName = "activate-business")
+        @Transactional
         @Override
         public void activate(UUID id) {
 
