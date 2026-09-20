@@ -123,14 +123,14 @@ services:
     image: jaegertracing/jaeger:2.21.0
     container_name: proximity-jaeger
     restart: unless-stopped
-
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
-
     ports:
       - "16686:16686"
+      - "16687:16687"
       - "4317:4317"
       - "4318:4318"
+      - "27778:27778"
 
     networks:
       - proximity-network
@@ -178,7 +178,6 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
-
       GF_USERS_ALLOW_SIGN_UP: "false"
 
     volumes:
@@ -223,8 +222,13 @@ services:
       # ------------------------------------------------------
       # OpenTelemetry / Jaeger
       # ------------------------------------------------------
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
-
+      # MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+      LOGGING_LEVEL_IO_OPENTELEMETRY: DEBUG
+      LOGGING_LEVEL_IO_MICROMETER_TRACING: DEBUG
+      MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+   
       # ------------------------------------------------------
       # JVM
       # ------------------------------------------------------
