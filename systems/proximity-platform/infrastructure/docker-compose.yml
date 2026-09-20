@@ -7,18 +7,14 @@ services:
     image: postgis/postgis:16-3.5
     container_name: proximity-postgres
     restart: unless-stopped
-
     environment:
       POSTGRES_DB: proximity
       POSTGRES_USER: proximity
       POSTGRES_PASSWORD: proximity
-
     ports:
       - "5432:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
     healthcheck:
       test:
         [
@@ -28,10 +24,34 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
     networks:
       - proximity-network
 
+
+  # ==========================================================
+  # Redis
+  # ==========================================================
+  redis:
+    image: redis:8.2-alpine
+    container_name: proximity-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - proximity-network
 
   # ==========================================================
   # Kafka
@@ -82,7 +102,6 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-
     networks:
       - proximity-network
 
@@ -93,13 +112,11 @@ services:
   kafka-init:
     image: apache/kafka:4.0.1
     container_name: proximity-kafka-init
-
     depends_on:
       kafka:
         condition: service_healthy
 
     entrypoint: ["/bin/bash", "-c"]
-
     command:
       - |
         /opt/kafka/bin/kafka-topics.sh \
@@ -131,7 +148,6 @@ services:
       - "4317:4317"
       - "4318:4318"
       - "27778:27778"
-
     networks:
       - proximity-network
 
@@ -143,23 +159,18 @@ services:
     image: prom/prometheus:v3.13.3
     container_name: proximity-prometheus
     restart: unless-stopped
-
     ports:
       - "9090:9090"
-
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=7d"
-
     depends_on:
       business-service:
         condition: service_started
-
     networks:
       - proximity-network
 
@@ -171,21 +182,16 @@ services:
     image: grafana/grafana:12.1.1
     container_name: proximity-grafana
     restart: unless-stopped
-
     ports:
       - "3000:3000"
-
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
-
     volumes:
       - grafana_data:/var/lib/grafana
-
     depends_on:
       - prometheus
-
     networks:
       - proximity-network
 
@@ -197,18 +203,15 @@ services:
     build:
       context: ../business-service
       dockerfile: Dockerfile
-
     container_name: proximity-business-service
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-
       # ------------------------------------------------------
       # Spring
       # ------------------------------------------------------
       SPRING_APPLICATION_NAME: business-service
-
       # ------------------------------------------------------
       # PostgreSQL
       # ------------------------------------------------------
@@ -245,30 +248,65 @@ services:
     networks:
       - proximity-network
 
+  # ==========================================================
+  # Proximity Service
+  # ==========================================================
+
+  proximity-service:
+    build:
+      context: ../proximity-service
+      dockerfile: Dockerfile
+    container_name: proximity-service
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_APPLICATION_NAME: proximity-service
+      SERVER_PORT: 8080
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/proximity
+      SPRING_DATASOURCE_USERNAME: proximity
+      SPRING_DATASOURCE_PASSWORD: proximity
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+      LOGGING_LEVEL_IO_OPENTELEMETRY: DEBUG
+      LOGGING_LEVEL_IO_MICROMETER_TRACING: DEBUG
+      MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED: "false"
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      JAVA_OPTS: >-
+        -XX:MaxRAMPercentage=75
+        -XX:+UseG1GC
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    networks:
+      - proximity-network
 
 # ============================================================
 # Volumes
 # ============================================================
 volumes:
-
   postgres_data:
     name: proximity-postgres-data
-
   kafka_data:
     name: proximity-kafka-data
-
   prometheus_data:
     name: proximity-prometheus-data
-
   grafana_data:
     name: proximity-grafana-data
+  redis_data:
+    name: proximity-redis-data
 
 
 # ============================================================
 # Network
 # ============================================================
 networks:
-
   proximity-network:
     name: proximity-network
     driver: bridge
