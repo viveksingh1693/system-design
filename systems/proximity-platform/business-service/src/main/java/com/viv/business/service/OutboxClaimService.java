@@ -26,7 +26,7 @@ public class OutboxClaimService {
             String publisherId,
             int batchSize) {
 
-        log.info("Claiming outbox events for publisherId: {} with batchSize: {}", publisherId, batchSize);
+        // log.info("Claiming outbox events for publisherId: {} with batchSize: {}", publisherId, batchSize);
 
         List<OutboxEvent> events =
                 repository.findPendingForUpdate(
@@ -34,7 +34,7 @@ public class OutboxClaimService {
                         PageRequest.of(0, batchSize)
                 );
 
-        log.info("Found {} outbox events to claim for publisherId: {}", events.size(), publisherId);
+        // log.info("Found {} outbox events to claim for publisherId: {}", events.size(), publisherId);
 
         Instant now = Instant.now();
 
@@ -44,7 +44,7 @@ public class OutboxClaimService {
             event.setClaimedBy(publisherId);
         }
 
-        log.info("Marked {} outbox events as PROCESSING for publisherId: {}", events.size(), publisherId);
+        // log.info("Marked {} outbox events as PROCESSING for publisherId: {}", events.size(), publisherId);
 
         return events;
     }
