@@ -3,6 +3,11 @@ spring:
     name: business-service
   profiles:
     default: test
+  logging:
+    level:
+      root: DEBUG
+      org.springframework.web: DEBUG
+      com.viv.business: DEBUG
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
@@ -43,4 +48,11 @@ management:
 
   otlp:
     tracing:
-      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318}
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://jaeger:4318/v1/traces}
+
+
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
