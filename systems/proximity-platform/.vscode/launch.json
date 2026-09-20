@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ProximityServiceApplication",
+            "request": "launch",
+            "mainClass": "com.viv.proximity.ProximityServiceApplication",
+            "projectName": "proximity-service"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"

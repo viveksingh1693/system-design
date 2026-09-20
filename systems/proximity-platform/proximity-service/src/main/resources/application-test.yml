@@ -1,9 +1,9 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/proximity
-    username: proximity
-    password: proximity
-    driver-class-name: org.postgresql.Driver
+  # datasource:
+  #   url: jdbc:postgresql://localhost:5432/proximity
+  #   username: proximity
+  #   password: proximity
+  #   driver-class-name: org.postgresql.Driver
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
