@@ -12,10 +12,25 @@
         },
         {
             "type": "java",
-            "name": "BusinessServiceApplication",
+            "name": "BusinessServiceApplication - Test",
             "request": "launch",
             "mainClass": "com.viv.business.BusinessServiceApplication",
-            "projectName": "business-service"
+            "projectName": "business-service",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "test"
+            },
+            "vmArgs": "-Duser.timezone=Asia/Kolkata"
+        },
+        {
+            "type": "java",
+            "name": "BusinessServiceApplication - Test",
+            "request": "launch",
+            "mainClass": "com.viv.business.BusinessServiceApplication",
+            "projectName": "business-service",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "test"
+            },
+            "vmArgs": "-Duser.timezone=Asia/Kolkata"
         }
     ]
 }

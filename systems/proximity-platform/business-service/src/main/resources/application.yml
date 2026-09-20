@@ -1,6 +1,8 @@
 spring:
   application:
     name: business-service
+  profiles:
+    default: test
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
