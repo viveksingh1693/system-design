@@ -1,68 +1,92 @@
 package com.viv.proximity.redis;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.Map;
-import java.util.UUID;
+import com.viv.proximity.dto.NearbyBusinessResponse;
+
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
 public class BusinessMetadataRepository {
 
-    private final RedisTemplate<String, String> redisTemplate;
+        private final RedisTemplate<String, String> redisTemplate;
 
-    public void save(
-            UUID businessId,
-            UUID locationId,
-            UUID categoryId,
-            String name,
-            String status,
-            double latitude,
-            double longitude) {
+        public Map<Object, Object> find(UUID businessId) {
 
-        String key =
-                RedisKeyBuilder.business(businessId);
+                return redisTemplate.opsForHash()
+                                .entries(
+                                                RedisKeyBuilder.business(businessId));
+        }
 
-        Map<String, String> metadata = Map.of(
-                "businessId", businessId.toString(),
-                "locationId", locationId.toString(),
-                "categoryId", categoryId.toString(),
-                "name", name,
-                "status", status,
-                "latitude", String.valueOf(latitude),
-                "longitude", String.valueOf(longitude)
-        );
+        public NearbyBusinessResponse findBusiness(
+                        UUID businessId,
+                        double distanceMeters) {
 
-        redisTemplate.opsForHash()
-                .putAll(key, metadata);
-    }
+                Map<Object, Object> data = find(businessId);
 
-    public Map<Object, Object> find(UUID businessId) {
+                if (data == null || data.isEmpty()) {
+                        return null;
+                }
 
-        return redisTemplate.opsForHash()
-                .entries(
-                        RedisKeyBuilder.business(businessId)
-                );
-    }
+                return new NearbyBusinessResponse(
+                                UUID.fromString(
+                                                value(data, "businessId")),
+                                UUID.fromString(
+                                                value(data, "locationId")),
+                                UUID.fromString(
+                                                value(data, "categoryId")),
+                                value(data, "name"),
+                                value(data, "status"),
+                                Double.parseDouble(
+                                                value(data, "latitude")),
+                                Double.parseDouble(
+                                                value(data, "longitude")),
+                                distanceMeters);
+        }
 
-    public void updateStatus(
-            UUID businessId,
-            String status) {
+        private String value(
+                        Map<Object, Object> data,
+                        String key) {
 
-        redisTemplate.opsForHash()
-                .put(
-                        RedisKeyBuilder.business(businessId),
-                        "status",
-                        status
-                );
-    }
+                Object value = data.get(key);
 
-    public void delete(UUID businessId) {
+                return value == null
+                                ? null
+                                : value.toString();
+        }
 
-        redisTemplate.delete(
-                RedisKeyBuilder.business(businessId)
-        );
-    }
+        public void updateStatus(UUID businessId, String status) {
+                redisTemplate.opsForHash().put(
+                                RedisKeyBuilder.business(businessId),
+                                "status",
+                                status);
+        }
+
+        public void save(
+                        UUID businessId,
+                        UUID locationId,
+                        UUID categoryId,
+                        String name,
+                        String status,
+                        double latitude,
+                        double longitude) {
+
+                String key = RedisKeyBuilder.business(businessId);
+
+                Map<String, String> metadata = Map.of(
+                                "businessId", businessId.toString(),
+                                "locationId", locationId.toString(),
+                                "categoryId", categoryId.toString(),
+                                "name", name,
+                                "status", status,
+                                "latitude", String.valueOf(latitude),
+                                "longitude", String.valueOf(longitude));
+
+                redisTemplate.opsForHash().putAll(key, metadata);
+        }
 }

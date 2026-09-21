@@ -9,11 +9,17 @@ public record BusinessLocationCreatedEvent(
 
         UUID locationId,
 
+        UUID categoryId,
+
+        String businessName,
+
+        String businessStatus,
+
         Double latitude,
 
         Double longitude,
 
-        String status,
+        String locationStatus,
 
         Instant occurredAt
 ) {
