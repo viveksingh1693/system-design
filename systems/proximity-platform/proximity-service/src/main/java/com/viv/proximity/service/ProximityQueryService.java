@@ -84,4 +84,6 @@ public class ProximityQueryService {
 
         return businesses;
     }
+
+    
 }

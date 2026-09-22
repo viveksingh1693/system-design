@@ -214,8 +214,7 @@ public class BusinessGeoIndexService {
         private void handleLocationDeactivated(
                         BusinessEventEnvelope envelope) {
 
-                geoRepository.remove(
-                                envelope.aggregateId());
+                geoRepository.remove(envelope.aggregateId());
         }
 
         private <T> T convert(

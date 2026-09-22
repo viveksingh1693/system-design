@@ -3,11 +3,8 @@ package com.viv.business.event;
 import java.time.Instant;
 import java.util.UUID;
 
-public record BusinessUpdatedEvent(
+public record BusinessLocationDeactivatedEvent(
         UUID businessId,
-        UUID categoryId,
-        String businessName,
-        String status,
+        UUID locationId,
         Instant occurredAt
-) {
-}
+) {}

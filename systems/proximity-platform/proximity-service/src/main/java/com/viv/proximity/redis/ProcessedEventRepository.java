@@ -68,4 +68,6 @@ public class ProcessedEventRepository {
 
         return "processing:event:" + eventId;
     }
+
+    
 }

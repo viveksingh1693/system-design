@@ -87,4 +87,13 @@ public class BusinessController {
         log.info("Deactivating business with id: {}", businessId);
         businessService.deactivate(businessId);
     }
+
+    @PatchMapping("/{businessId}/locations/{locationId}/deactivate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deactivateLocation(
+            @PathVariable UUID businessId,
+            @PathVariable UUID locationId) {
+
+        businessService.deactivateLocation(businessId, locationId);
+    }
 }

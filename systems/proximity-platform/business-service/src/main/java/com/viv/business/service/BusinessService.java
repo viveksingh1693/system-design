@@ -8,22 +8,19 @@ import com.viv.business.dto.UpdateBusinessRequest;
 
 public interface BusinessService {
 
-    BusinessResponse create(
-            CreateBusinessRequest request);
+        BusinessResponse create(CreateBusinessRequest request);
 
-    BusinessResponse getById(
-            UUID id);
+        BusinessResponse getById(UUID id);
 
-    BusinessResponse update(
-            UUID id,
-            UpdateBusinessRequest request);
+        BusinessResponse update(UUID id, UpdateBusinessRequest request);
 
-    void deactivate(
-            UUID id);
+        void deactivate(UUID id);
 
-    void suspend(
-            UUID id);
+        void suspend(UUID id);
 
-    void activate(
-            UUID id);
+        void activate(UUID id);
+
+        void deactivateLocation(UUID businessId, UUID locationId);
+
+        
 }
