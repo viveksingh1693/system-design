@@ -15,7 +15,19 @@ public final class RedisKeyBuilder {
         return "business:" + businessId;
     }
 
+    public static String businessLocation(UUID locationId) {
+        return "business:location:" + locationId;
+    }
+
+    public static String businessLocations(UUID businessId) {
+        return "business:locations:" + businessId;
+    }
+
     public static String processedEvent(UUID eventId) {
         return "processed:event:" + eventId;
+    }
+
+    public static String processingEvent(UUID eventId) {
+        return "processing:event:" + eventId;
     }
 }
