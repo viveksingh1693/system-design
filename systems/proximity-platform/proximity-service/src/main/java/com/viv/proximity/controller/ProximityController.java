@@ -18,11 +18,13 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/v1/proximity")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class ProximityController {
 
     private final ProximityQueryService proximityQueryService;
@@ -38,6 +40,7 @@ public class ProximityController {
 
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
 
+        log.info("Finding nearby businesses: latitude={}, longitude={}, radius={}, limit={}", latitude, longitude, radius, limit);
         List<NearbyBusinessResponse> businesses = proximityQueryService.findNearby(
                 latitude,
                 longitude,

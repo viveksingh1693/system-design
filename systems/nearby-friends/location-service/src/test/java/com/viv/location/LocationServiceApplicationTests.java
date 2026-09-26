@@ -1,10 +1,10 @@
-package com.viv.business_service;
+package com.viv.location;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class BusinessServiceApplicationTests {
+class LocationServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

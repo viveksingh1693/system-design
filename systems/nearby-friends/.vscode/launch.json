@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "LocationServiceApplication",
+            "request": "launch",
+            "mainClass": "com.viv.location.LocationServiceApplication",
+            "projectName": "location-service",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "default"
+            },
+            "vmArgs": "-Duser.timezone=Asia/Kolkata"
+        },
+        {
+            "type": "java",
+            "name": "NearbyServiceApplication",
+            "request": "launch",
+            "mainClass": "com.viv.nearby.NearbyServiceApplication",
+            "projectName": "nearby-service",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "default"
+            },
+            "vmArgs": "-Duser.timezone=Asia/Kolkata"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        }
+    ]
+}
