@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: location-processor
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cloud:
+    function:
+      definition: locationUpdates
+
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+
+      bindings:
+        locationUpdates-in:
+          destination: location-updates
+          group: location-processor
+          content-type: application/json
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - metrics

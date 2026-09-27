@@ -5,9 +5,9 @@ debug: true
 
 logging:
   level:
-    org.flywaydb: TRACE
-    db.migration: TRACE
-    root: DEBUG
+    org.flywaydb: INFO
+    db.migration: INFO
+    root: INFO
 
 spring:
   application:

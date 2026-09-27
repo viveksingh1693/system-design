@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "LocationProcessorApplication",
+            "request": "launch",
+            "mainClass": "com.viv.processor.LocationProcessorApplication",
+            "projectName": "location-processor"
+        },
+        {
+            "type": "java",
             "name": "LocationServiceApplication",
             "request": "launch",
             "mainClass": "com.viv.location.LocationServiceApplication",
