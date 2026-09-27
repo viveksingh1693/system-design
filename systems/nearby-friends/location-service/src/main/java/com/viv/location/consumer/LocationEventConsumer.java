@@ -12,17 +12,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class LocationEventConsumer {
 
-    private final UserGeoRepository userGeoRepository;
+    // private final UserGeoRepository userGeoRepository;
 
-    @KafkaListener(
-            topics = "location-updates",
-            groupId = "location-processor"
-    )
-    public void consume(LocationUpdatedEvent event) {
-        userGeoRepository.updateLocation(
-                event.userId(),
-                event.latitude(),
-                event.longitude());
-    }
+    // @KafkaListener(
+    //         topics = "location-updates",
+    //         groupId = "location-processor"
+    // )
+    // public void consume(LocationUpdatedEvent event) {
+    //     userGeoRepository.updateLocation(
+    //             event.userId(),
+    //             event.latitude(),
+    //             event.longitude());
+    // }
 
 }

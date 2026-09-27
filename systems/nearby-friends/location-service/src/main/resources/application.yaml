@@ -12,8 +12,17 @@ spring:
     redis:
       host: localhost
       port: 6379
-  kafka:
-    bootstrap-servers: localhost:9092
+
+  cloud:
+    stream:
+      bindings:
+        locationUpdates-out:
+          destination: location-updates
+          content-type: application/json
+          producer:
+            partition-key-expression: payload.userId
+      kafka:
+        bootstrap-servers: localhost:9092
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
