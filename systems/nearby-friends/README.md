@@ -1,43 +1,73 @@
+# Nearby Friends
+
+A Spring Boot system for finding a user's active friends within a geographic radius. Location updates are accepted by the location service, published through Kafka, and indexed in Redis GEO. The nearby service combines that index with active friendship records in PostgreSQL.
+
+## Services
+
+| Service | Port | Responsibility |
+| --- | ---: | --- |
+| `location-service` | 8080 | Accepts location updates and publishes events to Kafka. |
+| `location-processor` | 8082 | Consumes location events and maintains the Redis GEO index. |
+| `nearby-service` | 8081 | Finds nearby users and filters them to the requester's active friends. |
+
+PostgreSQL, Redis, Kafka, and Kafka UI are defined in [`docker-compose.yml`](docker-compose.yml). See [ARCHITECTURE.md](ARCHITECTURE.md) for the request flow and [DataModel.md](DataModel.md) for storage details.
+
+## Run Locally
+
+Start the dependencies from the repository root:
+
+```powershell
 docker compose up -d
+```
 
-docker exec nearby-kafka   /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+In separate terminals, start the services:
 
-docker exec nearby-kafka /opt/kafka/bin/kafka-topics.sh --create --topic location-updates --bootstrap-server localhost:9092 --partitions 6 --replication-factor 1
+```powershell
+cd location-service
+.\mvnw.cmd spring-boot:run
+```
 
+```powershell
+cd location-processor
+.\mvnw.cmd spring-boot:run
+```
 
-CREATE TABLE friendship (
-    user_id       VARCHAR(64) NOT NULL,
-    friend_id     VARCHAR(64) NOT NULL,
-    status        VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+```powershell
+cd nearby-service
+.\mvnw.cmd spring-boot:run
+```
 
-    PRIMARY KEY (user_id, friend_id)
-);
+The nearby service runs Flyway migrations at startup to create and seed the `friendship` table. Redis GEO data is populated asynchronously after a location update is accepted, so allow the Kafka consumer a moment to process the event before querying nearby friends.
 
-CREATE INDEX idx_friendship_user
-    ON friendship(user_id);
+## API
 
-INSERT INTO friendship(user_id, friend_id)
-VALUES
-('u1','u2'),
-('u1','u8'),
-('u1','u9'),
+### Find Nearby Friends
 
-('u2','u1'),
-('u2','u9'),
-('u2','u10'),
+```http
+GET http://localhost:8081/api/v1/nearby-friends?userId=u1&radiusKm=5
+```
 
-('u3','u1'),
-('u3','u2'),
-('u3','u4'),
-('u3','u5'),
-('u3','u6'),
-('u3','u7'),
-('u3','u8'),
-('u3','u9'),
-('u3','u10');
+`userId` is required. `radiusKm` is optional and defaults to `5`. The response is an array ordered by ascending distance:
 
+```json
+[
+  {
+    "userId": "u2",
+    "distanceKm": 0.3
+  }
+]
+```
 
+If the requesting user has no current location in Redis, the service returns an empty array. The query only includes users within the radius who have an `ACTIVE` friendship row where the requester is `user_id`.
+
+### Submit a Location Update
+
+```http
+POST http://localhost:8080/api/v1/locations
+Content-Type: application/json
+```
+
+```json
 {
   "userId": "u1",
   "latitude": 28.4595,
@@ -45,33 +75,10 @@ VALUES
   "accuracyMeters": 8.5,
   "timestamp": "2026-09-25T06:30:00Z"
 }
+```
 
+The location API responds with `202 Accepted`. The event is processed asynchronously before it becomes searchable. The `nearby-service` does not provide a location-write endpoint.
 
-nearby:users
-GEOADD nearby:users 77.0266 28.4595 u1
-GEOADD nearby:users 77.0300 28.4610 u2
-GEOADD nearby:users 77.0200 28.4580 u3
+## Postman
 
-
-             u1 Mobile
-                │
-                │ location update
-                ▼
-       ┌──────────────────┐
-       │ Location Service │
-       └────────┬─────────┘
-                │
-                │ Kafka
-                ▼
-       ┌──────────────────┐
-       │ location-updates │
-       └────────┬─────────┘
-                │
-                ▼
-       ┌──────────────────┐
-       │ Location Worker  │
-       └────────┬─────────┘
-                │
-                ▼
-          Redis GEO
-       nearby:users
+Import [`postman/nearby.postman_collection.json`](postman/nearby.postman_collection.json) into Postman. Set the collection's `baseUrl`, `userId`, and `radiusKm` variables as needed. A location for the user and active friendship rows must already exist for results to be returned.

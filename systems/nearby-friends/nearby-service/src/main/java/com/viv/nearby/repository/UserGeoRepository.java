@@ -16,8 +16,7 @@ import java.util.List;
 @Repository
 public class UserGeoRepository {
 
-        private static final String GEO_KEY = "nearby:users";
-
+        private static final String GEO_KEY = "nearby:user:geo";
         private final RedisTemplate<String, String> redisTemplate;
 
         public UserGeoRepository(RedisTemplate<String, String> redisTemplate) {

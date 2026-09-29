@@ -10,14 +10,25 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserGeoRepository {
 
-    private static final String GEO_KEY = "nearby:users";
+        private static final String GEO_KEY = "nearby:user:geo";
 
-    private final RedisTemplate<String, String> redisTemplate;
+        private final RedisTemplate<String, String> redisTemplate;
 
-    public void updateLocation(
-            String userId, double latitude, double longitude) {
-        redisTemplate.opsForGeo()
-        .add(GEO_KEY, new Point(longitude, latitude), userId);
-    }
+        /**
+         * Updates the user's current location in the Redis GEO index.
+         *
+         * Redis GEO expects coordinates in:
+         * longitude, latitude
+         */
+        public void updateLocation(
+                        String userId,
+                        double latitude,
+                        double longitude) {
 
+                redisTemplate.opsForGeo()
+                                .add(
+                                                GEO_KEY,
+                                                new Point(longitude, latitude),
+                                                userId);
+        }
 }

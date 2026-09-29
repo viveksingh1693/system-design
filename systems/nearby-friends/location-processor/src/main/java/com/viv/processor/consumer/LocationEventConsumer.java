@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
 
-@Slf4j 
+@Slf4j
 @Configuration
 public class LocationEventConsumer {
 
@@ -20,18 +20,13 @@ public class LocationEventConsumer {
 
         return event -> {
 
-            userGeoRepository.updateLocation(
-                    event.userId(),
-                    event.latitude(),
-                    event.longitude()
-            );
+            boolean updated = userGeoRepository.updateLocation(event);
 
-            log.info(
-                    "Updated location: user={}} lat={}} lon={}}",
-                    event.userId(),
-                    event.latitude(),
-                    event.longitude()
-            );
+            if (updated) {
+                log.info("Location updated: user={}, timestamp={}", event.userId(), event.timestamp());
+            } else {
+                log.info("Stale location ignored: user={}, timestamp={}", event.userId(), event.timestamp());
+            }
         };
     }
 }

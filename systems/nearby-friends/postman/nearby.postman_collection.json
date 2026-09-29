@@ -1,0 +1,80 @@
+{
+  "info": {
+    "_postman_id": "a124a1b7-a9f0-49ad-a234-900aab7989e1",
+    "name": "Nearby Friends API",
+    "description": "Requests for the nearby-service API. A user's location must be indexed in Redis and friendships seeded in PostgreSQL for nearby results.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "userId",
+      "value": "u1"
+    },
+    {
+      "key": "radiusKm",
+      "value": "5"
+    }
+  ],
+  "item": [
+    {
+      "name": "Find nearby friends",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/nearby-friends?userId={{userId}}&radiusKm={{radiusKm}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "nearby-friends"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "radiusKm",
+              "value": "{{radiusKm}}"
+            }
+          ]
+        },
+        "description": "Returns active friends within the requested radius, ordered by ascending distance. Omitting radiusKm uses the service default of 5 km. If the requester has no indexed location, the response is an empty array."
+      },
+      "response": []
+    },
+    {
+      "name": "Find nearby friends (default radius)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/nearby-friends?userId={{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "nearby-friends"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            }
+          ]
+        },
+        "description": "Uses the service's default search radius of 5 km."
+      },
+      "response": []
+    }
+  ]
+}

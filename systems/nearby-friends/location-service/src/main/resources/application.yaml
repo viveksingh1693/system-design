@@ -21,8 +21,13 @@ spring:
           content-type: application/json
           producer:
             partition-key-expression: payload.userId
+            partition-count: 3
       kafka:
-        bootstrap-servers: localhost:9092
+        # bootstrap-servers: localhost:9092
+        # bootstrap-servers: localhost:29092
+        binder:
+          brokers: 
+          - localhost:29092
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer

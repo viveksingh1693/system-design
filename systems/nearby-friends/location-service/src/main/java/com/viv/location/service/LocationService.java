@@ -7,7 +7,9 @@ import com.viv.location.model.LocationUpdatedEvent;
 import com.viv.location.publisher.LocationEventPublisher;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j 
 @Service
 @AllArgsConstructor
 public class LocationService {
@@ -16,6 +18,7 @@ public class LocationService {
 
     public void updateLocation(LocationUpdateRequest request) {
 
+        log.info("Updating location: {}" ,request);
         LocationUpdatedEvent event = new LocationUpdatedEvent(
                 request.userId(),
                 request.latitude(),

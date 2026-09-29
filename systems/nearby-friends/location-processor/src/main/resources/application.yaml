@@ -14,10 +14,11 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: 
+          - localhost:29092
 
       bindings:
-        locationUpdates-in:
+        locationUpdates-in-0:
           destination: location-updates
           group: location-processor
           content-type: application/json
